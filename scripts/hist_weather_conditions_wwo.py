@@ -25,6 +25,7 @@ aggregate = r"C:\Users\steph\Documents\Python\Projects\Silas\Data\Created\Harves
 def createcsv(outputfile):
     # set variable to the output file pathway, used later to skip header
     file_exists = os.path.isfile(outputfile)
+
     # start writing/appending
     with open(aggregate, 'ab') as f:
         w = csv.writer(f)
@@ -34,9 +35,11 @@ def createcsv(outputfile):
                   "pressure_mb", "dewpoint_f", "head_index_f", "percipitation_mm",
                   "visualbility_km", "moon_phase", "dayofyear", "species", "angler",
                   "angler_id", "harvest_id")
+
         # if file exists, don't write header again
         if not file_exists:
             w.writerow(header)
+
         # return data from gethwc() and write to rows
         rows = gethwc(harvest)
         w.writerows(rows)
@@ -49,6 +52,7 @@ def gethwc(path):
         rcsv = csv.reader(csvfile, delimiter=',')
         # skip first row
         next(rcsv, None)
+
         for row in rcsv:
             date = row[0]
             lat = row[1]
@@ -87,17 +91,21 @@ def gethwc(path):
                 yyyy = date[0:4]  # isolate first four digits >> year
                 mm = date[4:6]  # isolate 5th and 6th digit >> month
                 dd = date[6:9]  # isolate 7th and 8th digit >> date
+
             # use PoolManager to make requests, bc thread safety
             http = urllib3.PoolManager()
+
             try:
                 # request() returns HTTPResponse object.
                 # Add json at end of url to return json data
-                r = http.request('GET', 'http://api.worldweatheronline.com/premium/v1/past-weather.ashx?key'
-                                        '=bb6c160935dd4e0d83511632182504&q=' +
-                                 lat + ',' + lon + '&format=json&date=' + yyyy + '-' + mm + '-' + dd + '&tp=24')
+                r = http.request('GET',
+                                 'http://api.worldweatheronline.com/premium/v1/past-weather.ashx?key'
+                                 '=_YOUR_KEY_HERE_&q=' + lat + ',' + lon +
+                                 '&format=json&date=' + yyyy + '-' + mm + '-' + dd + '&tp=24')
             except urllib3.exceptions.HTTPError as e:
                 print "HTTP error:              ", e
                 break
+
             print "Request Time:        ", time.clock()
 
             '''To get climate data, we first need to know what keys & the dictionary 
@@ -112,6 +120,7 @@ def gethwc(path):
             parsed_json = json.loads(jsondata.decode('utf-8'))
             # return the first key in response body
             body = parsed_json['data']
+
             # some harvest dates aren't in API and return error
             if "error" in body:
                 print "Warning:              " + parsed_json['data']['error'][0]['msg']
@@ -151,16 +160,19 @@ def gethwc(path):
                 wd = parsed_json['data']['weather'][0]['hourly'][0]['winddirDegree']
                 # wind speed, km/hour, [0, max]
                 ws = parsed_json['data']['weather'][0]['hourly'][0]['windspeedKmph']
+
                 '''Organize the copied, computed, and retrieved data into the same sequence 
                 as the headers of createcsv(), then return them all so they can be used
                 to populate a new csv.'''
                 seq = (date, lat, lon, utc, uv, cc, temp, hu, wd, ws, ap,
                        dew, hi, precip, viz, mp, dy, spp, angler, a_id, h_id)
                 yield seq
+
             # sleep in order to limit rate of requests to API
             print "\nNap Time:            ", time.clock()
             time.sleep(6)
             print "\n"
+
     # close harvest records
     csvfile.close()
 
