@@ -100,8 +100,9 @@ def gethwc(path):
                 # Add json at end of url to return json data
                 r = http.request('GET',
                                  'http://api.worldweatheronline.com/premium/v1/past-weather.ashx?key'
-                                 '=_YOUR_KEY_HERE_&q=' + lat + ',' + lon +
-                                 '&format=json&date=' + yyyy + '-' + mm + '-' + dd + '&tp=24')
+                                 '=_YOUR_KEY_HERE_&q=' + lat + ',' + lon + '&format=json&date=' + 
+                                 yyyy + '-' + mm + '-' + dd + '&tp=24')
+
             except urllib3.exceptions.HTTPError as e:
                 print "HTTP error:              ", e
                 break
@@ -127,6 +128,7 @@ def gethwc(path):
                 # print "\n"
                 # error message when we reach our rquest limit/day
                 limit_error = "API key has reached calls per day allowed limit."
+
                 # if we max out our limit, break the loop and end program
                 if limit_error in body:
                     break
@@ -166,6 +168,7 @@ def gethwc(path):
                 to populate a new csv.'''
                 seq = (date, lat, lon, utc, uv, cc, temp, hu, wd, ws, ap,
                        dew, hi, precip, viz, mp, dy, spp, angler, a_id, h_id)
+
                 yield seq
 
             # sleep in order to limit rate of requests to API
