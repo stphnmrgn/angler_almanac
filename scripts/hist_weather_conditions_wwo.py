@@ -1,9 +1,7 @@
 """
-Title:          hist_weather_conditions_wwo_v2.py
 Python:         2.7.10
 Purpose         Aggregating freshwater fish harvest records with weather conditions
 Author:         Stephen Morgan
-Date:           03/03/2018
 """
 
 import urllib3
@@ -14,32 +12,26 @@ import time
 import ephem
 import datetime
 
+
 # input csv file, harvest records of freshwater anglers
-harvest = r"C:\Users\steph\Documents\Python\Projects\Silas\Data\Created\Harvest\Harvests_scrubbed_DemoSample.csv"
+harvest = r"C:\Your\Data\Harvest\Harvests_scrubbed_DemoSample.csv"
 # output csv file, aggregate harvest records and climatic variables
-aggregate = r"C:\Users\steph\Documents\Python\Projects\Silas\Data\Created\Harvest_Weather_Aggregate" \
-            r"\Harvest_WWO_aggregate_DemoSample.csv "
+aggregate = r"C:\Your\Data\Created\Harvest_Weather_Aggregate\Harvest_WWO_aggregate_DemoSample.csv "
 
 
-# create csv using copied, computed, and retrieved data from gethwc()
 def createcsv(outputfile):
     # set variable to the output file pathway, used later to skip header
     file_exists = os.path.isfile(outputfile)
-
-    # start writing/appending
     with open(aggregate, 'ab') as f:
         w = csv.writer(f)
-        # set column headers of the csv
         header = ("date", "latitude", "longitude", "time", "uv_index", "cloud_cover",
                   "temp_f", "humidity", "wind_direction_degrees", "wind_speed_kmph",
                   "pressure_mb", "dewpoint_f", "head_index_f", "percipitation_mm",
                   "visualbility_km", "moon_phase", "dayofyear", "species", "angler",
                   "angler_id", "harvest_id")
-
         # if file exists, don't write header again
         if not file_exists:
             w.writerow(header)
-
         # return data from gethwc() and write to rows
         rows = gethwc(harvest)
         w.writerows(rows)
@@ -47,7 +39,6 @@ def createcsv(outputfile):
 
 # get historical weather conditions
 def gethwc(path):
-    # read harvest records in the input file for processing
     with open(harvest, 'rb') as csvfile:
         rcsv = csv.reader(csvfile, delimiter=',')
         # skip first row
@@ -63,11 +54,11 @@ def gethwc(path):
             a_id = row[11]  # angler id
             angler = row[12]
 
-            '''Calculate Moon's illumination using utc values and ephem. Earth's moon 
+            """Calculate Moon's illumination using utc values and ephem. Earth's moon 
             is a standard body in ephem. We ignore the "UTC" string in the utc field 
             (utc[:-3]) and pass it to ephem so it can compute the Moon's position 
             for each utc date. Ephem can return the moon's illumination or moon_phase 
-            attribute using the moons position and utc date'''
+            attribute using the moons position and utc date"""
 
             # calculate moon phase
             for i in utc:
@@ -100,40 +91,37 @@ def gethwc(path):
                 # Add json at end of url to return json data
                 r = http.request('GET',
                                  'http://api.worldweatheronline.com/premium/v1/past-weather.ashx?key'
-                                 '=_YOUR_KEY_HERE_&q=' + lat + ',' + lon + '&format=json&date=' + 
+                                 '=_YOUR_KEY_HERE_&q=' + lat + ',' + lon + '&format=json&date=' +
                                  yyyy + '-' + mm + '-' + dd + '&tp=24')
-
             except urllib3.exceptions.HTTPError as e:
                 print "HTTP error:              ", e
                 break
 
             print "Request Time:        ", time.clock()
 
-            '''To get climate data, we first need to know what keys & the dictionary 
+            """To get climate data, we first need to know what keys & the dictionary 
             the keys are within. Using the print statement parsed_json/jsondata we
             determined the keys & dictionaries the climate data are stored:
             The key "data" contains key "weather" which contains a dictionary [] 
-            that contains the key "date"'''
+            that contains the key "date""""
 
             # response = r.status #<<<---commented out, return http response code
             jsondata = r.data  # return json data
-            # format json data for parsing
             parsed_json = json.loads(jsondata.decode('utf-8'))
             # return the first key in response body
             body = parsed_json['data']
 
             # some harvest dates aren't in API and return error
             if "error" in body:
-                print "Warning:              " + parsed_json['data']['error'][0]['msg']
-                # print "\n"
+                print "Warning:              " + \
+                    parsed_json['data']['error'][0]['msg']
                 # error message when we reach our rquest limit/day
                 limit_error = "API key has reached calls per day allowed limit."
-
                 # if we max out our limit, break the loop and end program
+                # if no data/error, then only yeild three fields
                 if limit_error in body:
                     break
                 else:
-                    # if no data/error, then only yeild three fields
                     seq = (date, lat, lon)
                     yield seq
             else:
@@ -163,9 +151,10 @@ def gethwc(path):
                 # wind speed, km/hour, [0, max]
                 ws = parsed_json['data']['weather'][0]['hourly'][0]['windspeedKmph']
 
-                '''Organize the copied, computed, and retrieved data into the same sequence 
+                """Organize the copied, computed, and retrieved data into the same sequence 
                 as the headers of createcsv(), then return them all so they can be used
-                to populate a new csv.'''
+                to populate a new csv."""
+
                 seq = (date, lat, lon, utc, uv, cc, temp, hu, wd, ws, ap,
                        dew, hi, precip, viz, mp, dy, spp, angler, a_id, h_id)
 
