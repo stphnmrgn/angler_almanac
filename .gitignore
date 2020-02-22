@@ -6,6 +6,22 @@ __pycache__/
 # C extensions
 *.so
 
+# data directory
+data/
+
+# CSV extensions
+*.csv
+
+# Shapefile extensions
+*.cpg
+*.dbf
+*.prj
+*.shp*
+*.shx
+
+# VS Code settings
+.vscode/
+
 # Distribution / packaging
 .Python
 build/
