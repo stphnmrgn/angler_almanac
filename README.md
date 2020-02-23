@@ -1,2 +1,2 @@
 # angler_almanac
-Uses sklearn's RandomForestRegressor to estimate the relationships between weather variales and recreational angler harvest success
+Attempts to use sklearn's RandomForestRegressor to estimate the relationships between weather variales and recreational angler harvest success
